@@ -1,22 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   environment.h                                      :+:      :+:    :+:   */
+/*   parser_utils0.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/10 16:45:45 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/04/20 16:52:18 by yhajbi           ###   ########.fr       */
+/*   Created: 2025/04/27 18:50:56 by yhajbi            #+#    #+#             */
+/*   Updated: 2025/05/03 18:58:44 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef ENVIRONMENT_H
-# define ENVIRONMENT_H
+#include "../inc/minishell.h"
 
-# include "structs.h"
+int	is_arg(t_tokens_type type)
+{
+	return (type == TOKEN_CMD || type == TOKEN_ARG || type == TOKEN_WORD);
+}
 
-t_env	*get_env(char **env);
-char	*get_env_value(t_env *s_env, char *name);
-char	*get_env_value2(t_env *s_env, char *name);
+int	is_redirection(t_tokens_type type)
+{
+	return (type == TOKEN_APPEND || type == TOKEN_HDOC || type == TOKEN_RED_IN
+		|| type == TOKEN_RED_OUT);
+}
 
-#endif
+int	is_file_eof(t_tokens_type type)
+{
+	return (type == TOKEN_FILE || type == TOKEN_EOF);
+}

@@ -1,28 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pwd.c                                              :+:      :+:    :+:   */
+/*   strutils3.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/04/23 13:43:43 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/08 15:40:05 by hnemmass         ###   ########.fr       */
+/*   Created: 2025/04/27 20:50:57 by yhajbi            #+#    #+#             */
+/*   Updated: 2025/04/27 21:13:12 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../inc/execution.h"
+#include "../inc/minishell.h"
 
-int	ft_pwd(t_minishell *mini)
+void	ft_strcpy(char *dest, const char *src)
 {
-	char	*buffer;
+	int	i;
 
-	buffer = getcwd(NULL, 0);
-	if (!buffer)
-		return (printf("%s\n", mini->cwd), 0);
-	else
+	i = 0;
+	if (!src || !dest)
+		return;
+	while (src[i])
 	{
-		printf("%s\n", buffer);
-		free (buffer);
-		return (0);
+		dest[i] = src[i];
+		i++;
 	}
 }

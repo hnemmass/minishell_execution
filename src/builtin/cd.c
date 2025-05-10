@@ -6,76 +6,18 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 14:16:38 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/04/23 19:04:50 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/08 14:35:13 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/execution.h"
-
-// #include <stdio.h>
-// #include <stdlib.h>
-// #include <string.h>
-// #include <unistd.h>
-
-// typedef struct s_env {
-// 	char *name;
-// 	char *value;
-// 	struct s_env *next;
-// } t_env;
-
-// // ===== Declare your functions here (from cd.c) =====
-// int cd(char **cmd, struct s_env *env);
-// char *ft_strdup(const char *s);
-// int ft_strcmp(const char *s1, const char *s2);
-
-// // ===== Basic strdup and strcmp =====
-// char *ft_strdup(const char *s)
-// {
-// 	char *copy = malloc(strlen(s) + 1);
-// 	if (!copy)
-// 		return (NULL);
-// 	strcpy(copy, s);
-// 	return copy;
-// }
-
-// int ft_strcmp(const char *s1, const char *s2)
-// {
-// 	while (*s1 && *s2 && *s1 == *s2)
-// 	{
-// 		s1++;
-// 		s2++;
-// 	}
-// 	return (*(unsigned char *)s1 - *(unsigned char *)s2);
-// }
-
-// // ===== Helper to print environment =====
-// void print_env(t_env *env)
-// {
-// 	while (env)
-// 	{
-// 		printf("%s=%s\n", env->name, env->value);
-// 		env = env->next;
-// 	}
-// }
-
-// // ===== Helper to create env variable =====
-// t_env *create_env(char *name, char *value)
-// {
-// 	t_env *new = malloc(sizeof(t_env));
-// 	if (!new)
-// 		return NULL;
-// 	new->name = ft_strdup(name);
-// 	new->value = ft_strdup(value);
-// 	new->next = NULL;
-// 	return new;
-// }
 
 static char	*search_for_dir(t_env *env, char *name)
 {
 	t_env	*tmp_env;
 
 	tmp_env = env;
-	while(tmp_env)
+	while (tmp_env)
 	{
 		if (!ft_strcmp(tmp_env->name, name))
 			return (tmp_env->value);
@@ -83,20 +25,11 @@ static char	*search_for_dir(t_env *env, char *name)
 	}
 	return (NULL);
 }
-static int	change_pwd(char *path, t_env *env)
+
+static void	update_oldpwd(t_env *env, char *old_pwd)
 {
 	t_env	*tmp;
-	char	*cwd;
-	char	*old_pwd;
-	int exitstatus =0;
 
-	cwd = getcwd(NULL, 0);
-	if (!cwd)
-	{
-		exitstatus = 1;
-		perror("getcwd:");
-	}
-	old_pwd = search_for_dir(env, "PWD");
 	tmp = env;
 	while (tmp)
 	{
@@ -104,10 +37,16 @@ static int	change_pwd(char *path, t_env *env)
 		{
 			free(tmp->value);
 			tmp->value = ft_strdup(old_pwd);
-			break;
+			break ;
 		}
 		tmp = tmp->next;
 	}
+}
+
+static void	update_pwd(t_env *env, char *cwd)
+{
+	t_env	*tmp;
+
 	tmp = env;
 	while (tmp)
 	{
@@ -115,15 +54,58 @@ static int	change_pwd(char *path, t_env *env)
 		{
 			free(tmp->value);
 			tmp->value = ft_strdup(cwd);
-			break;
+			break ;
 		}
 		tmp = tmp->next;
 	}
-	free (cwd);
-	return (exitstatus);
 }
 
-int	ft_cd(char **cmd, t_env *env)
+static int	change_pwd(char *path, t_env *env, t_minishell *mini)
+{
+	char	*cwd;
+	char	*old_pwd;
+	char	*b_old_pwd;
+
+	b_old_pwd = NULL;
+	old_pwd = NULL;
+	cwd = getcwd(NULL, 0);
+	if (!cwd)
+	{
+		printf("cd: error retrieving current directory: getcwd: ");
+		printf("cannot access parent directories: No such file or directory\n");
+		if (!search_for_dir(env, "PWD"))
+		{
+			b_old_pwd = ft_strdup(mini->cwd);
+			cwd = ft_strjoin(mini->cwd, "/");
+			cwd = ft_strjoin(cwd, path);
+		}
+		else
+		{
+			cwd = ft_strjoin(search_for_dir(env, "PWD"), "/");
+			cwd = ft_strjoin(cwd, path);
+		}
+	}
+	old_pwd = search_for_dir(env, "PWD");
+	if (!old_pwd)
+	{
+		old_pwd = search_for_dir(env, "OLDPWD");
+		if (old_pwd)
+			update_oldpwd(env, mini->cwd);
+	}
+	else if (old_pwd)
+	{
+		b_old_pwd = search_for_dir(env, "OLDPWD");
+		if (b_old_pwd)
+			update_oldpwd(env, old_pwd);
+		update_pwd(env, cwd);
+	}
+	free(mini->cwd);
+	mini->cwd = ft_strdup(cwd);
+	free(cwd);
+	return (0);
+}
+
+int	ft_cd(char **cmd, t_env *env, t_minishell *mini)
 {
 	char	*path;
 
@@ -141,41 +123,7 @@ int	ft_cd(char **cmd, t_env *env)
 		path = cmd[1];
 	if (chdir(path) == -1)
 		return (perror("cd"), 1);
-	if (change_pwd(path, env))
-		return (perror("cd"), 1);
+	if (change_pwd(path, env, mini))
+		return (1);
 	return (0);
 }
-
-// // ===== Main for testing cd =====
-// int main(int argc, char **argv)
-// {
-// 	t_env *env = create_env("PWD", getcwd(NULL, 0));
-// 	t_env *oldpwd = create_env("OLDPWD", "");
-// 	t_env *home = create_env("HOME", getenv("HOME"));
-
-// 	// Link env list
-// 	env->next = oldpwd;
-// 	oldpwd->next = home;
-
-// 	printf("Before cd:\n");
-// 	print_env(env);
-
-// 	// Simulate cd
-// 	cd(&argv[1], env);
-
-
-// 	printf("\nAfter cd:\n");
-// 	print_env(env);
-
-// 	// Free environment (basic cleanup)
-// 	t_env *tmp;
-// 	while (env)
-// 	{
-// 		tmp = env->next;
-// 		free(env->name);
-// 		free(env->value);
-// 		free(env);
-// 		env = tmp;
-// 	}
-// 	return 0;
-// }

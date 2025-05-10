@@ -6,13 +6,13 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 13:48:33 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/04/23 18:32:29 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/06 14:51:02 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/execution.h"
 
-void	ft_unset(char **cmd, t_env *env)
+int	ft_unset(char **cmd, t_env *env)
 {
 	int		i;
 	t_env	*current;
@@ -23,6 +23,11 @@ void	ft_unset(char **cmd, t_env *env)
 	{
 		current = env;
 		prev = NULL;
+		if (cmd[i][0] == '_' && !cmd[i][1])
+		{
+			i++;
+			continue;
+		}
 		while (current && strcmp(current->name, cmd[i]) != 0)
 		{
 			prev = current;
@@ -40,4 +45,5 @@ void	ft_unset(char **cmd, t_env *env)
 		}
 		i++;
 	}
+	return (0);
 }

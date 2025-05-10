@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/18 05:52:54 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/01/10 19:34:49 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/05 17:30:03 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 # include <unistd.h>
 
 char	*get_next_line(int fd);
-size_t	ft_strlen(const char *s);
+size_t	ft_strlen_2(const char *s);
 int		find(char *result);
 char	*alloc(char *result, char *buffer);
 char	*crop_till(char *tmp, int i);

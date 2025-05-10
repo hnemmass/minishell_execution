@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/09 17:03:11 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/04/16 17:40:51 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/07 17:57:22 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ typedef struct	s_env			t_env;
 typedef struct	s_token			t_token;
 typedef struct	s_cmd			t_cmd;
 typedef struct	s_redirect		t_redirect;
+typedef struct	s_parse			t_parse;
+typedef struct	s_substring		t_substring;
 
 typedef struct	s_minishell
 {
@@ -26,6 +28,7 @@ typedef struct	s_minishell
 	t_token	*s_tokens;
 	t_cmd	*s_cmd;
 	int		stdfd[2];
+	int		exit_status;
 }			t_minishell;
 
 typedef struct	s_env
@@ -40,6 +43,7 @@ typedef enum	e_status
 	STATUS_SUCCESS,
 	STATUS_FAILURE,
 	STATUS_MALLOC_FAIL,
+	STATUS_SYNTAX_ERR,
 	STATUS_EXIT_CMD
 }				t_status;
 
@@ -55,6 +59,8 @@ typedef enum	e_tokens_type
 	TOKEN_EOF,
 	TOKEN_APPEND,	/* >> */
 	TOKEN_FILE,
+	TOKEN_ARG,
+	TOKEN_VAR
 }		t_tokens_type;
 
 typedef struct	s_token
@@ -79,5 +85,21 @@ typedef struct	s_redirect
 	char				*file;
 	struct s_redirect	*next;
 }						t_redirect;
+
+/*	----	FOR PARSING		----	*/
+
+typedef enum	e_quotes
+{
+	UNQUOTED,
+	DOUBLE_QUOTED,
+	SINGLE_QUOTED
+}				t_quotes;
+
+typedef struct	s_substring
+{
+	char				*str;
+	t_quotes			type;
+	struct s_substring	*next;
+}				t_substring;
 
 #endif

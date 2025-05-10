@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:05:26 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/04/27 16:34:35 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/06 18:32:02 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ static int	compare(char *line, char *delimiter)
 	return (1);
 }
 
-static int	handle_heredoc(char *delimiter)
+static int	handle_heredoc(char *delimiter, int position)
 {
 	char	*line;
 	int		temp_fd;
@@ -52,25 +52,29 @@ static int	handle_heredoc(char *delimiter)
 	temp_fd = open("heredoc_tmp", O_RDWR | O_CREAT | O_TRUNC, 0644);
 	if (temp_fd == -1)
 		return (perror("heredoc"), 1);
-	unlink("heredoc_tmp");
-	while(1337)
+	while (1337)
 	{
-		ft_putstr_fd("> ", 1);
+		ft_putstr_fd("> ", 2);
 		line = get_next_line(0);
-		if(!line || compare(line, delimiter))
+		if (!line || !compare(line, delimiter))
 		{
 			free(line);
-			break ;
+			break;
 		}
 		ft_putstr_fd(line, temp_fd);
 		free(line);
 	}
 	close(temp_fd);
-	temp_fd = open("heredoc_tmp", O_RDONLY);
-	if (temp_fd == -1)
-		return (perror("heredoc"), 1);
-	dup2(temp_fd, 0);
-	return(close(temp_fd), 0);
+	if (position == 0)
+	{
+		temp_fd = open("heredoc_tmp", O_RDONLY);
+		if (temp_fd == -1)
+			return (perror("heredoc"), 1);
+		dup2(temp_fd, STDIN_FILENO);
+		close(temp_fd);
+		unlink("heredoc_tmp");
+	}
+	return (0);
 }
 
 static int	open_with_mode(char *filename, int mode)
@@ -83,8 +87,8 @@ static int	open_with_mode(char *filename, int mode)
 		fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	else if (mode == 3)
 		fd = open(filename, O_CREAT | O_WRONLY | O_APPEND, 0644);
-	else
-		return (-1);
+	// else
+	// 	return (-1);
 	if (fd == -1)
 		perror(filename);
 	return (fd);
@@ -97,7 +101,7 @@ static int	get_fd_type(int token_type)
 	return (STDOUT_FILENO);
 }
 
-int	apply_redirections(t_redirect *red)
+int	apply_redirections(t_redirect *red, int hdoc_position)
 {
 	int fd;
 	int mode;
@@ -109,18 +113,16 @@ int	apply_redirections(t_redirect *red)
 	else if (red->type == TOKEN_APPEND)
 		mode = 3;
 	else if (red->type == TOKEN_HDOC)
-		return (handle_heredoc(red->file));
+	{
+		return (handle_heredoc(red->file, hdoc_position));
+	}
 	else
 		return (0);
-	if (red->type != TOKEN_HDOC)
-	{
-		fd = open_with_mode(red->file, mode);
-		if (fd == -1)
-			exit (1);
-		dup2(fd, get_fd_type(red->type));
-		close(fd);
-	}
-	if(mode == 2 || mode == 3)
-		return (2);
+	fd = open_with_mode(red->file, mode);
+	if (fd == -1)
+		exit(1);
+	dup2(fd, get_fd_type(red->type));
+	close(fd);
+
 	return (0);
 }

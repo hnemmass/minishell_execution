@@ -6,13 +6,14 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/18 06:02:07 by hnemmass          #+#    #+#             */
-/*   Updated: 2024/11/24 04:30:08 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/05 17:30:16 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include "../../../inc/minishell.h"
 
-size_t	ft_strlen(const char *s)
+size_t	ft_strlen_2(const char *s)
 {
 	size_t	i;
 
@@ -47,10 +48,10 @@ char	*alloc(char *result, char *buffer)
 	int		len;
 
 	i = 0;
-	len = ft_strlen(buffer);
+	len = ft_strlen_2(buffer);
 	if (!result)
 		return (crop_till(buffer, len));
-	len += ft_strlen(result);
+	len += ft_strlen_2(result);
 	new = malloc(len + 1);
 	if (!new)
 		return (free(result), NULL);
@@ -59,9 +60,9 @@ char	*alloc(char *result, char *buffer)
 		new[i] = result[i];
 		i++;
 	}
-	while (buffer[i - ft_strlen(result)])
+	while (buffer[i - ft_strlen_2(result)])
 	{
-		new[i] = buffer[i - ft_strlen(result)];
+		new[i] = buffer[i - ft_strlen_2(result)];
 		i++;
 	}
 	new[i] = '\0';
@@ -106,7 +107,7 @@ char	*crop(char **result)
 	line = crop_till(tmp, i);
 	if (!line)
 		return (free(*result), *result = NULL, NULL);
-	*result = crop_till(tmp + i, ft_strlen(tmp + i));
+	*result = crop_till(tmp + i, ft_strlen_2(tmp + i));
 	free(tmp);
 	tmp = NULL;
 	return (line);

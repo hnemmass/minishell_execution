@@ -6,7 +6,7 @@
 /*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 16:36:53 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/04/12 17:21:12 by yhajbi           ###   ########.fr       */
+/*   Updated: 2025/04/22 16:52:43 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,11 @@ t_env	*get_env(char **env)
 	ret = (t_env *)malloc(sizeof(t_env));
 	if (!ret)
 		return (NULL);
+	ret->name = NULL;
+	ret->value = NULL;
+	ret->next = NULL;
+	if (!env || !*env)
+		return (ret);
 	node = ret;
 	while (env[i])
 	{
