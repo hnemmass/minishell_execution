@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/08 17:16:24 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/09 16:47:39 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/11 16:29:35 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,20 @@ static void	print_cmds(t_cmd *s_cmd);
 void print_cmd_structure(t_cmd *cmd_list);
 
 /*			---------		MAIN		--------			*/
+
+static t_cmd	*create_cmd(void)
+{
+	t_cmd	*new;
+
+	new = malloc(sizeof(t_cmd));
+	if (!new)
+		return (NULL);
+	new->argv = NULL;
+	new->is_builtin = 0;
+	new->s_redirect = NULL;
+	new->next = NULL;
+	return (new);
+}
 
 int main(int arc, char **argv, char **env)
 {
@@ -65,6 +79,7 @@ static t_status	minishell(t_minishell **s_minishell)
 {
 	t_minishell	*s_ms;
 
+	s_ms->s_cmd = create_cmd();
 	s_ms = *s_minishell;
 	s_ms->cmdline = readline(PROMPT);
 	if (!s_ms->cmdline)
@@ -77,14 +92,16 @@ static t_status	minishell(t_minishell **s_minishell)
 	}
 	add_history(s_ms->cmdline);
 	s_ms->s_tokens = ft_tokenizer(s_ms->cmdline);
-	parse_command_line(s_ms);
-	// print_tokens(s_ms->s_tokens);
-	//s_ms->s_cmd = parse(s_ms->s_tokens);
+	if (parse_command_line(s_ms) != STATUS_FAILURE)
+		ft_execute(s_ms->s_cmd, s_ms);
+	// s_ms->s_cmd = parse(s_ms->s_tokens);
 	// print_cmds(s_ms->s_cmd);
+	//print_tokens(s_ms->s_tokens);
 	// print_cmd_structure(s_ms->s_cmd);
-	ft_execute(s_ms->s_cmd, s_ms);
 	free(s_ms->cmdline);
 	ft_free_tokens(s_ms->s_tokens);
+	if (s_ms->s_cmd)
+		free_commands(s_ms);
 	return (STATUS_SUCCESS);
 }
 

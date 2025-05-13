@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 21:14:33 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/09 16:46:17 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/09 18:21:45 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 //static char		*remove_quotes(char *s);
 //static int		count_quotes(char *s);
 //static int			has_quotes(char *s);
-static char			*remove_quotes(char *s, t_env *s_env);
+static char			*remove_quotes(char *s, t_env *s_env, int exit_status);
 static int			is_word(t_tokens_type type);
 static t_substring	*split_quotes(char *s);
 static void			add_substring(t_substring **head, char *s, char quote);
@@ -23,9 +23,10 @@ static t_quotes		identify_quotes(char quote);
 static int			count_substrings(char *s);
 static char			*join_substrings(t_substring *head);
 static void			split_and_insert_tokens(t_token **head, t_token *node, t_token *prv);
+static void 		change_tabs(char *line);
 static void			free_split(char **split);
 
-void	handle_quotes(t_token *s_tokens, t_env *s_env)
+void	handle_quotes(t_token *s_tokens, t_env *s_env, int exit_status)
 {
 	t_token	*node;
 	t_token	*prv;
@@ -39,18 +40,22 @@ void	handle_quotes(t_token *s_tokens, t_env *s_env)
 		old_value = node->value;
 		if (has_quotes(node->value))
 		{
-			node->value = remove_quotes(node->value, s_env);
+			node->value = remove_quotes(node->value, s_env, exit_status);
 			if (old_value != NULL)
 				free(old_value);
 		}
 		else if (!has_quotes(node->value) && is_word(node->type))
 		{
-			node->value = scan_string(node->value, s_env);
+			node->value = scan_string(node->value, s_env, exit_status);
 			if (old_value != NULL)
 				free(old_value);
+			if ((ft_strchr(node->value, ' ') || ft_strchr(node->value, '\t'))
+				&& ft_strcmp("export", prv->value)  == 0 && !ft_strchr(node->value, '='))
+				split_and_insert_tokens(&s_tokens, node, prv);
+			else if ((ft_strchr(node->value, ' ') || ft_strchr(node->value, '\t'))
+				&& ft_strcmp("export", prv->value) != 0)
+				split_and_insert_tokens(&s_tokens, node, prv);
 		}
-		if (ft_strchr(node->value, ' ') && ft_strcmp("export", prv->value) != 0)
-			split_and_insert_tokens(&s_tokens, node, prv);
 		prv = node;
 		node = node->next;
 	}
@@ -77,7 +82,7 @@ static int	is_word(t_tokens_type type)
 		|| type == TOKEN_FILE);
 }
 
-static char	*remove_quotes(char *s, t_env *s_env)
+static char	*remove_quotes(char *s, t_env *s_env, int exit_status)
 {
 	t_substring	*list;
 	char		*ret;
@@ -91,7 +96,7 @@ static char	*remove_quotes(char *s, t_env *s_env)
 		printf("[%s] --> %d\n", node->str, node->type);
 		node = node->next;
 	}*/
-	expand_variables(&list, s_env);
+	expand_variables(&list, s_env, exit_status);
 	ret = join_substrings(list);
 	//printf("[%s]\n", ret);
 	/*free_substrings(list);
@@ -252,6 +257,7 @@ static void	split_and_insert_tokens(t_token **head, t_token *node, t_token *prv)
 	t_token	*next_node;
 	int		i;
 
+	change_tabs(node->value);
 	split_words = ft_split(node->value, " ");
 	if (!split_words)
 		return ;
@@ -272,6 +278,19 @@ static void	split_and_insert_tokens(t_token **head, t_token *node, t_token *prv)
 	}
 	node->next = NULL;
 	free_split(split_words);
+}
+
+static void change_tabs(char *line)
+{
+    int i;
+
+    i = 0;
+    while (line[i])
+    {
+        if (line[i] == '\t')
+            line[i] = ' ';
+        i++;
+    }
 }
 
 static void	free_split(char **split)

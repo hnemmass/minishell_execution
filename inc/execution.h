@@ -6,21 +6,22 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 17:11:28 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/08 15:40:21 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/11 15:31:05 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef EXECUTION_H
 # define EXECUTION_H
 
+# include "parsing.h"
 # include "structs.h"
 # include <unistd.h>
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <fcntl.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <stdio.h>
 
 char	**env_to_array(t_env *env);
 void	ft_putchar_fd(char c, int fd);
@@ -32,7 +33,7 @@ char	*get_next_line(int fd);
 char	**ft_split_2(char const *s, char c);
 char	*ft_strjoin(char *s1, char *s2);
 char	*ft_strdup(char *s);
-int		apply_redirections(t_redirect *red, int i);
+int		apply_redirections(t_redirect *red, int i, t_minishell *mini, t_redirect *last_input);
 int		ft_cd(char **cmd, t_env *env, t_minishell *mini);
 int		ft_echo(char **cmd);
 int		ft_env(t_env *env);
