@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 14:13:32 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/08 14:35:40 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/10 14:38:35 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -358,11 +358,18 @@ int	ft_export(char **cmd, t_env *env)
 	int		flag;
 
 	i = 1;
-	if (!cmd[1])
+	while(cmd[i] && cmd[i][0] == '\0')
+		i++;
+	if (!cmd[i])
 		sort_and_display(env);
 	while (cmd[i])
 	{
 		flag = check_valid_input(cmd[i]);
+		if (cmd[i][0] == '\0')
+		{
+			i++;
+			continue ;
+		}
 		if (flag == 5)
 		{
 			i++;

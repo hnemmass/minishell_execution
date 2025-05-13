@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   strutils1.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
+/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/09 17:38:43 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/01 18:55:30 by yhajbi           ###   ########.fr       */
+/*   Updated: 2025/05/10 16:45:23 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,6 +68,8 @@ int	ft_strcmp(const char *s1, const char *s2)
 	int	i;
 
 	i = 0;
+	if (!s1 || !s2)
+		return(1);
 	while (s1[i] && s2[i])
 	{
 		if (s1[i] - s2[i] != 0)

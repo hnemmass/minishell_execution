@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:05:26 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/06 18:32:02 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/11 15:42:07 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ static int	compare(char *line, char *delimiter)
 	return (1);
 }
 
-static int	handle_heredoc(char *delimiter, int position)
+static int	handle_heredoc(char *delimiter, int position, t_minishell *mini)
 {
 	char	*line;
 	int		temp_fd;
@@ -61,6 +61,7 @@ static int	handle_heredoc(char *delimiter, int position)
 			free(line);
 			break;
 		}
+		line = scan_string(line, mini->s_env, mini->exit_status);
 		ft_putstr_fd(line, temp_fd);
 		free(line);
 	}
@@ -77,12 +78,17 @@ static int	handle_heredoc(char *delimiter, int position)
 	return (0);
 }
 
-static int	open_with_mode(char *filename, int mode)
+static int	open_with_mode(char *filename, int mode, t_redirect *last_input)
 {
 	int fd;
 	
 	if (mode == 1)
-		fd = open(filename, O_RDONLY);
+	{
+		if (last_input->type != TOKEN_HDOC && ft_strcmp(last_input->file, filename) == 0)
+			fd = open(filename, O_RDONLY);
+		else
+			fd = 15;
+	}
 	else if (mode == 2)
 		fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
 	else if (mode == 3)
@@ -101,7 +107,7 @@ static int	get_fd_type(int token_type)
 	return (STDOUT_FILENO);
 }
 
-int	apply_redirections(t_redirect *red, int hdoc_position)
+int	apply_redirections(t_redirect *red, int hdoc_position, t_minishell *mini, t_redirect *last_input)
 {
 	int fd;
 	int mode;
@@ -114,13 +120,15 @@ int	apply_redirections(t_redirect *red, int hdoc_position)
 		mode = 3;
 	else if (red->type == TOKEN_HDOC)
 	{
-		return (handle_heredoc(red->file, hdoc_position));
+		return (handle_heredoc(red->file, hdoc_position, mini));
 	}
 	else
 		return (0);
-	fd = open_with_mode(red->file, mode);
+	fd = open_with_mode(red->file, mode, last_input);
 	if (fd == -1)
 		exit(1);
+	if (fd == 15)
+		return (0);
 	dup2(fd, get_fd_type(red->type));
 	close(fd);
 

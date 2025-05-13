@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expander.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 18:06:02 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/09 13:20:36 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/09 18:49:17 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,12 +14,15 @@
 
 //static char	*scan_string(char *s, t_env *s_env);
 static char	*str_append_str(char *s1, char *s2);
+static char	*str_append_num(char *s1, char *s2);
+static int	ft_strlen_num(char *s);
 static int	is_valid_var(char *s, t_env *s_env);
 static int	ft_strlen_var(char *s);
 static int	is_delimiter(char c);
+static int	is_num(char c);
 static char	*str_append_char(char *s, char c);
 
-void	expand_variables(t_substring **head, t_env *s_env)
+void	expand_variables(t_substring **head, t_env *s_env, int exit_status)
 {
 	t_substring	*node;
 	char		*old_value;
@@ -30,7 +33,7 @@ void	expand_variables(t_substring **head, t_env *s_env)
 		old_value = node->str;
 		if (has_var(node->str) && (node->type == DOUBLE_QUOTED || node->type == UNQUOTED))
 		{
-			node->str = scan_string(node->str, s_env);
+			node->str = scan_string(node->str, s_env, exit_status);
 			if (old_value != NULL)
 				free(old_value);
 		}
@@ -38,7 +41,7 @@ void	expand_variables(t_substring **head, t_env *s_env)
 	}
 }
 
-char	*scan_string(char *s, t_env *s_env)
+char	*scan_string(char *s, t_env *s_env, int exit_status)
 {
 	int		i;
 	char	*ret;
@@ -53,6 +56,16 @@ char	*scan_string(char *s, t_env *s_env)
 			{
 				ret = str_append_str(ret, "$$");
 				i += 2;
+			}
+			else if (s[i + 1] == '?')
+			{
+				ret = str_append_str(ret, ft_itoa(exit_status));
+				i += 2;
+			}
+			else if (is_num(s[i + 1]))
+			{
+				ret = str_append_num(ret, s + i + 2);
+				i += ft_strlen_num(s + i);
 			}
 			else if (is_delimiter(s[i + 1]))
 			{
@@ -91,6 +104,39 @@ static char	*str_append_str(char *s1, char *s2)
 	return (new_str);
 }
 
+static char	*str_append_num(char *s1, char *s2)
+{
+	char	*new_str;
+	int		len1;
+	int		len2;
+	int		i;
+	int		j;
+
+	len1 = ft_strlen(s1);
+	len2 = ft_strlen_num(s2);
+	new_str = malloc(sizeof(char) * (len1 + len2 + 1));
+	if (!new_str)
+		return (NULL);
+	ft_strlcpy(new_str, s1, len1 + 1);
+	i = len1;
+	j = 0;
+	while (s2[j] && is_num(s2[j]))
+		new_str[i++] = s2[j++];
+	new_str[i] = '\0';
+	free(s1);
+	return (new_str);
+}
+
+static int	ft_strlen_num(char *s)
+{
+	int	i;
+
+	i = 0;
+	while (s[i] && (is_num(s[i])) || s[i] == '$')
+		i++;
+	return (i);
+}
+
 static int	is_valid_var(char *s, t_env *s_env)
 {
 	t_env	*node;
@@ -122,9 +168,15 @@ static int	is_delimiter(char c)
 		|| c == '\'' || c == '$' || c == '\0'
 		|| c == '+' || c == '-' || c == '.'
 		|| c == '[' || c == ']' || c == '{'
-		|| c == '}' || c == '(' || c == ')');
+		|| c == '}' || c == '(' || c == ')'
+		|| c == '=' || is_num(c) || c == ',');
 	/*return (c == ' ' || c == '\'' || c == '\"'
 		|| c == '$' || c == '\0');*/
+}
+
+static int	is_num(char c)
+{
+	return (c >= '0' && c <= '9');
 }
 
 static char	*str_append_char(char *s, char c)
