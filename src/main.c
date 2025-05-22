@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/08 17:16:24 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/11 16:29:35 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/22 20:42:32 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,8 @@ static t_status	minishell(t_minishell **s_minishell)
 {
 	t_minishell	*s_ms;
 
+	//kant fach kandir cmd o flcmd li moraha can presser entrer kat segfaulter
+	//hit katkoun s_cmd ma minitializech o kan accedew chi haja ma minitializeach
 	s_ms->s_cmd = create_cmd();
 	s_ms = *s_minishell;
 	s_ms->cmdline = readline(PROMPT);

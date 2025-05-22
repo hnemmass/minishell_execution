@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 14:12:57 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/11 17:01:48 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/22 20:46:25 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,6 +46,7 @@ void free_commands(t_minishell *s_minishell)
     t_cmd *current;
     t_cmd *next;
 
+	//dima kant katle3 segfault b valgrind, can't kat access chi nodes NULL
     if (!s_minishell->s_cmd)
         return;
     

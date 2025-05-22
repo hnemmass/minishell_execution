@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expander.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
+/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 18:06:02 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/09 18:49:17 by yhajbi           ###   ########.fr       */
+/*   Updated: 2025/05/22 20:57:44 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,22 @@ static int	is_num(char c)
 	return (c >= '0' && c <= '9');
 }
 
+// static char	*str_append_char(char *s, char c)
+// {
+// 	char	*new_str;
+// 	int		len;
+
+// 	len = ft_strlen(s);
+// 	new_str = malloc(sizeof(char) * (len + 2));
+// 	if (!new_str)
+// 		return (NULL);
+// 	ft_strlcpy(new_str, s, len + 1);
+// 	ft_strlcpy(new_str + len, &c, 2);
+// 	free(s);
+// 	return (new_str);
+// }
+
+//diyalek li lfo9 kanti kat acceder c like a pointer so kay7sabl strlen 3dno '/0'
 static char	*str_append_char(char *s, char c)
 {
 	char	*new_str;
@@ -189,10 +205,12 @@ static char	*str_append_char(char *s, char c)
 	if (!new_str)
 		return (NULL);
 	ft_strlcpy(new_str, s, len + 1);
-	ft_strlcpy(new_str + len, &c, 2);
+	new_str[len] = c;
+	new_str[len + 1] = '\0';
 	free(s);
 	return (new_str);
 }
+
 
 /*static int	count_split(char **split);
 static void	expand_words(char **split, t_env *s_env, int flag1, int flag2);
