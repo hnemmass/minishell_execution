@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 17:11:28 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/11 15:31:05 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/22 20:28:13 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@
 # include <string.h>
 # include <stdio.h>
 
+int     ft_exit(char **cmd, t_minishell *mini);
 char	**env_to_array(t_env *env);
 void	ft_putchar_fd(char c, int fd);
 void	ft_putstr_fd(char *s, int fd);
@@ -33,7 +34,7 @@ char	*get_next_line(int fd);
 char	**ft_split_2(char const *s, char c);
 char	*ft_strjoin(char *s1, char *s2);
 char	*ft_strdup(char *s);
-int		apply_redirections(t_redirect *red, int i, t_minishell *mini, t_redirect *last_input);
+int		apply_redirections(t_redirect *red, t_minishell *mini, t_redirect *last_input);
 int		ft_cd(char **cmd, t_env *env, t_minishell *mini);
 int		ft_echo(char **cmd);
 int		ft_env(t_env *env);
