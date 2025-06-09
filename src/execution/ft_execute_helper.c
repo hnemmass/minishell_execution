@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 17:13:37 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/11 13:21:09 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/05 13:23:57 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,9 +180,9 @@ static void check_cwd(char **cmd, char **env_array)
 	}
 	perror(cmd[0]);
 	free(temp);
-	if (errno == ENOENT)
-        exit (127);
-    else if (errno == EACCES)
+	// if (errno == ENOENT)
+    //     exit (127);
+    if (errno == EACCES)
         exit (126);
     else
         exit (127);

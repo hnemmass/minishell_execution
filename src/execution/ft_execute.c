@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:45:12 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/22 20:28:29 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/08 20:09:36 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -180,45 +180,141 @@ static int	open_heredoc_file(char *filename)
 	return (fd);
 }
 
-static int	process_heredoc(char *delimiter, int cmd_index, int hdoc_index,
-		t_minishell *mini)
+static void	heredoc_signal_handler(int sig)
+{
+	if (sig == SIGINT)
+	{
+		printf("\n");
+		exit(130); // Exit with status 130 (128 + SIGINT)
+	}
+}
+
+static void	setup_heredoc_signals(void)
+{
+	signal(SIGINT, heredoc_signal_handler);
+	signal(SIGQUIT, SIG_IGN);
+}
+
+static int	heredoc_child_process(char *delimiter, char *filename, t_minishell *mini)
 {
 	char	*line;
-	char	*filename;
 	int		tty_fd;
 	int		temp_fd;
 
-	filename = create_heredoc_filename(cmd_index, hdoc_index);
-	if (!filename)
-		return (-1);
+	// Setup different signal handling for heredoc
+	setup_heredoc_signals();
+	
 	tty_fd = open("/dev/tty", O_RDONLY);
 	if (tty_fd == -1)
-		return (free(filename), perror("open /dev/tty"), -1);
+	{
+		perror("open /dev/tty");
+		exit(1);
+	}
+	
 	temp_fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
 	if (temp_fd == -1)
 	{
-		free(filename);
+		perror("heredoc");
 		close(tty_fd);
-		return (perror("heredoc"), -1);
+		exit(1);
 	}
+	
 	while (1)
 	{
-		ft_putstr_fd("> ", 2);
+		ft_putstr_fd("> ", 1);
 		line = get_next_line(tty_fd);
-		if (!line || !compare(line, delimiter))
-			break ;
+		if (!line)
+		{
+			ft_putstr_fd("\n", 1);
+			break;
+		}
+		if (!compare(line, delimiter))
+		{
+			free(line);
+			break;
+		}
 		line = scan_string(line, mini->s_env, mini->exit_status);
 		ft_putstr_fd(line, temp_fd);
 		free(line);
 	}
-	free(line);
+	
 	close(temp_fd);
-	temp_fd = open_heredoc_file(filename);
-	free(filename);
 	close(tty_fd);
-	return (temp_fd);
+	exit(0); // Child exits successfully
 }
 
+static int	process_heredoc(char *delimiter, int cmd_index, int hdoc_index, t_minishell *mini)
+{
+	char	*filename;
+	pid_t	pid;
+	int		status;
+	void	(*old_sigint)(int);
+	void	(*old_sigquit)(int);
+
+	filename = create_heredoc_filename(cmd_index, hdoc_index);
+	if (!filename)
+		return (-1);
+
+	// Temporarily ignore signals in parent while child handles heredoc
+	old_sigint = signal(SIGINT, SIG_IGN);
+	old_sigquit = signal(SIGQUIT, SIG_IGN);
+
+	pid = fork();
+	if (pid == -1)
+	{
+		perror("fork");
+		free(filename);
+		// Restore original signal handlers
+		signal(SIGINT, old_sigint);
+		signal(SIGQUIT, old_sigquit);
+		return (-1);
+	}
+	
+	if (pid == 0)
+	{
+		// Child process handles heredoc input
+		heredoc_child_process(delimiter, filename, mini);
+		// This line should never be reached
+		exit(1);
+	}
+	else
+	{
+		// Parent process waits for child
+		waitpid(pid, &status, 0);
+		
+		// Restore original signal handlers
+		signal(SIGINT, old_sigint);
+		signal(SIGQUIT, old_sigquit);
+		
+		// Check if child was interrupted by signal
+		if (WIFSIGNALED(status))
+		{
+			int sig = WTERMSIG(status);
+			if (sig == SIGINT)
+			{
+				// Child was interrupted, cleanup and return error
+				unlink(filename);
+				free(filename);
+				mini->exit_status = 130;
+				printf("\n"); // Print newline after ^C
+				return (-1);
+			}
+		}
+		
+		// Check if child exited with error
+		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
+		{
+			unlink(filename);
+			free(filename);
+			return (-1);
+		}
+		
+		// Open the heredoc file for reading
+		int fd = open_heredoc_file(filename);
+		free(filename);
+		return (fd);
+	}
+}
 static t_redirect	*find_last_heredoc(t_redirect *redir)
 {
 	t_redirect	*last;

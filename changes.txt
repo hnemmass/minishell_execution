@@ -1,8 +1,0 @@
-src/main.c/ function: minishell
-utils/free_minishell.c/ function: free_commands
-                                  free_argv
-src/expanding/expander.c/ function: str_append_char
-
-
-struct.h zedt wa7d variable 3la 7ssab heredoc m7tajha 7awel f initializationt
-7awel tinitializeha to -1

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/17 17:08:40 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/09 18:15:13 by yhajbi           ###   ########.fr       */
+/*   Updated: 2025/05/23 16:40:00 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -167,6 +167,7 @@ static t_redirect	*create_redirect(t_tokens_type new_type, char *new_file)
 		return (NULL);
 	new->type = new_type;
 	new->file = ft_strdup(new_file);
+	new->heredoc_fd = -1;
 	new->next = NULL;
 	return (new);
 }

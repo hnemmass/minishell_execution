@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expander.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/20 18:06:02 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/22 20:57:44 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/23 20:57:56 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ static char	*str_append_num(char *s1, char *s2);
 static int	ft_strlen_num(char *s);
 static int	is_valid_var(char *s, t_env *s_env);
 static int	ft_strlen_var(char *s);
+static int	is_delimiter2(char c);
 static int	is_delimiter(char c);
 static int	is_num(char c);
 static char	*str_append_char(char *s, char c);
@@ -132,7 +133,7 @@ static int	ft_strlen_num(char *s)
 	int	i;
 
 	i = 0;
-	while (s[i] && (is_num(s[i])) || s[i] == '$')
+	while (s[i] && (is_num(s[i]) || s[i] == '$'))
 		i++;
 	return (i);
 }
@@ -156,9 +157,22 @@ static int	ft_strlen_var(char *s)
 	int	i;
 
 	i = 0;
-	while (s[i] && !is_delimiter(s[i]))
+	while (s[i] && !is_delimiter2(s[i]))
 		i++;
 	return (i);
+}
+
+static int	is_delimiter2(char c)
+{
+	return (c == ' ' || c == '\t' || c == '\n'
+		|| c == '\v' || c == '\f' || c == '\r'
+		|| c == '\'' || c == '$' || c == '\0'
+		|| c == '+' || c == '-' || c == '.'
+		|| c == '[' || c == ']' || c == '{'
+		|| c == '}' || c == '(' || c == ')'
+		|| c == '=' || c == ',');
+	/*return (c == ' ' || c == '\'' || c == '\"'
+		|| c == '$' || c == '\0');*/
 }
 
 static int	is_delimiter(char c)
@@ -179,22 +193,6 @@ static int	is_num(char c)
 	return (c >= '0' && c <= '9');
 }
 
-// static char	*str_append_char(char *s, char c)
-// {
-// 	char	*new_str;
-// 	int		len;
-
-// 	len = ft_strlen(s);
-// 	new_str = malloc(sizeof(char) * (len + 2));
-// 	if (!new_str)
-// 		return (NULL);
-// 	ft_strlcpy(new_str, s, len + 1);
-// 	ft_strlcpy(new_str + len, &c, 2);
-// 	free(s);
-// 	return (new_str);
-// }
-
-//diyalek li lfo9 kanti kat acceder c like a pointer so kay7sabl strlen 3dno '/0'
 static char	*str_append_char(char *s, char c)
 {
 	char	*new_str;
@@ -205,12 +203,12 @@ static char	*str_append_char(char *s, char c)
 	if (!new_str)
 		return (NULL);
 	ft_strlcpy(new_str, s, len + 1);
+	//ft_strlcpy(new_str + len, &c, 2);
 	new_str[len] = c;
 	new_str[len + 1] = '\0';
 	free(s);
 	return (new_str);
 }
-
 
 /*static int	count_split(char **split);
 static void	expand_words(char **split, t_env *s_env, int flag1, int flag2);

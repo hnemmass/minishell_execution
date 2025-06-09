@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/11 14:12:57 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/22 20:46:25 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/23 17:28:03 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,30 +41,23 @@ void	free_env(t_env *env)
 	}
 }
 
-void free_commands(t_minishell *s_minishell)
+void	free_commands(t_minishell *s_minishell)
 {
-    t_cmd *current;
-    t_cmd *next;
+	t_cmd	*node;
+	t_cmd	*cup;
 
-	//dima kant katle3 segfault b valgrind, can't kat access chi nodes NULL
-    if (!s_minishell->s_cmd)
-        return;
-    
-    current = s_minishell->s_cmd;
-    while (current)
-    {
-        next = current->next;  // Save next pointer before freeing current
-        
-        if (current->argv != NULL)
-            free_argv(current->argv);
-        if (current->s_redirect != NULL)
-            free_redirection(current->s_redirect);
-        
-        free(current);
-        current = next;  // Move to next node using our saved pointer
-    }
-    
-    s_minishell->s_cmd = NULL;  // Prevent dangling pointer
+	if (!s_minishell->s_cmd)
+		return ;
+	node = s_minishell->s_cmd;
+	cup = NULL;
+	while (node)
+	{
+		cup = node->next;
+		free_argv(node->argv);
+		free_redirection(node->s_redirect);
+		free(node);
+		node = cup;
+	}
 }
 
 static void	free_argv(char **argv)
@@ -72,9 +65,7 @@ static void	free_argv(char **argv)
 	int	i;
 
 	i = 0;
-	if (!argv)
-		return;
-	while (argv[i])
+	while (argv && argv[i])
 		free(argv[i++]);
 }
 

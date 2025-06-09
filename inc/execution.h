@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 17:11:28 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/22 20:28:13 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/08 20:07:34 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,15 @@
 # include "parsing.h"
 # include "structs.h"
 # include <unistd.h>
+# include <readline/readline.h>
+# include <readline/history.h>
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <fcntl.h>
 # include <stdlib.h>
 # include <string.h>
 # include <stdio.h>
+# include <signal.h>
 
 int     ft_exit(char **cmd, t_minishell *mini);
 char	**env_to_array(t_env *env);

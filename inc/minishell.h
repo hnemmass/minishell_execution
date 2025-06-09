@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/08 17:16:39 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/05 16:11:09 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/08 19:31:38 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,10 @@
 # include "parsing.h"
 # include "environment.h"
 # include "utils.h"
+# include "get_next_line.h"
 # include "execution.h"
 
 # define PROMPT	"minishell> "
+
 
 #endif

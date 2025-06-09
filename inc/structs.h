@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   structs.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
+/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/09 17:03:11 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/22 19:53:00 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/05/29 18:02:06 by yhajbi           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,11 +96,24 @@ typedef enum	e_quotes
 	SINGLE_QUOTED
 }				t_quotes;
 
+typedef enum	e_is_expanded
+{
+	WAS_NOT_EXPANDED,
+	WAS_EXPANDED
+}				t_is_expanded;
+
 typedef struct	s_substring
 {
 	char				*str;
 	t_quotes			type;
 	struct s_substring	*next;
 }				t_substring;
+
+typedef struct	s_export_parse
+{
+	char					*fragment;
+	t_is_expanded			type;
+	struct s_export_parse	*next;
+}							t_export_parse;
 
 #endif

@@ -6,35 +6,24 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/08 17:16:24 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/05/22 20:42:32 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/08 19:52:06 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/minishell.h"
 
 static t_minishell	*init_minishell(char **env, t_status *e_status);
-static t_status	minishell(t_minishell **s_minishell);
-static void	print_env(t_env *env);
-static void	print_tokens(t_token *s_tokens);
-static char	*print_value(int v);
-static void	print_cmds(t_cmd *s_cmd);
-void print_cmd_structure(t_cmd *cmd_list);
+static t_status		minishell(t_minishell **s_minishell);
+static t_cmd		*create_cmd();
+static void			print_env(t_env *env);
+static void			print_tokens(t_token *s_tokens);
+static char			*print_value(int v);
+static void			print_cmds(t_cmd *s_cmd);
+void 				print_cmd_structure(t_cmd *cmd_list);
 
 /*			---------		MAIN		--------			*/
 
-static t_cmd	*create_cmd(void)
-{
-	t_cmd	*new;
-
-	new = malloc(sizeof(t_cmd));
-	if (!new)
-		return (NULL);
-	new->argv = NULL;
-	new->is_builtin = 0;
-	new->s_redirect = NULL;
-	new->next = NULL;
-	return (new);
-}
+volatile sig_atomic_t signal_context = 0;
 
 int main(int arc, char **argv, char **env)
 {
@@ -54,6 +43,8 @@ int main(int arc, char **argv, char **env)
 		if (e_status == STATUS_EXIT_CMD)
 			break ;
 	}
+	close(s_minishell->stdfd[0]);
+	close(s_minishell->stdfd[1]);
 	return (free_minishell(s_minishell), STATUS_SUCCESS);
 }
 
@@ -75,17 +66,34 @@ static t_minishell	*init_minishell(char **env, t_status *e_status)
 	return (s_minishell);
 }
 
+void	handle_int(int sig)
+{
+	printf("\n");
+	rl_on_new_line();
+	rl_replace_line("", 0);
+	rl_redisplay();
+	(void) sig;
+}
+
+void	check_signal(void)
+{
+	signal(SIGINT, handle_int);
+	signal(SIGQUIT, SIG_IGN);
+}
+
 static t_status	minishell(t_minishell **s_minishell)
 {
 	t_minishell	*s_ms;
 
-	//kant fach kandir cmd o flcmd li moraha can presser entrer kat segfaulter
-	//hit katkoun s_cmd ma minitializech o kan accedew chi haja ma minitializeach
 	s_ms->s_cmd = create_cmd();
 	s_ms = *s_minishell;
+	check_signal();
 	s_ms->cmdline = readline(PROMPT);
 	if (!s_ms->cmdline)
-		return (STATUS_FAILURE);
+	{
+		printf("exit\n");
+		exit(0);
+	}
 	if (ft_strcmp(s_ms->cmdline, "exit") == 0)
 	{
 		rl_clear_history();
@@ -96,17 +104,29 @@ static t_status	minishell(t_minishell **s_minishell)
 	s_ms->s_tokens = ft_tokenizer(s_ms->cmdline);
 	if (parse_command_line(s_ms) != STATUS_FAILURE)
 		ft_execute(s_ms->s_cmd, s_ms);
-	// s_ms->s_cmd = parse(s_ms->s_tokens);
+	//s_ms->s_cmd = parse(s_ms->s_tokens);
 	// print_cmds(s_ms->s_cmd);
 	//print_tokens(s_ms->s_tokens);
 	// print_cmd_structure(s_ms->s_cmd);
 	free(s_ms->cmdline);
 	ft_free_tokens(s_ms->s_tokens);
-	if (s_ms->s_cmd)
-		free_commands(s_ms);
+	free_commands(s_ms);
 	return (STATUS_SUCCESS);
 }
 
+static t_cmd	*create_cmd(void)
+{
+	t_cmd	*new;
+
+	new = malloc(sizeof(t_cmd));
+	if (!new)
+		return (NULL);
+	new->argv = NULL;
+	new->is_builtin = 0;
+	new->s_redirect = NULL;
+	new->next = NULL;
+	return (new);
+}
 
 /*			--------		TESTING FUNCTIONS		--------			*/
 
