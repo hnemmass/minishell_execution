@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/18 15:05:26 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/05/22 19:57:19 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/09 17:10:23 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,6 @@ static int	open_with_mode(char *filename, int mode)
 		fd = open(filename, O_CREAT | O_WRONLY | O_APPEND, 0644);
 	else
 		return (-1);
-		
 	if (fd == -1)
 		perror(filename);
 	return (fd);
@@ -55,7 +54,7 @@ static int	get_fd_type(int token_type)
 	return (STDOUT_FILENO);
 }
 
-int apply_redirections(t_redirect *red, t_minishell *mini, t_redirect *last_input)
+int apply_redirections(t_redirect *red, t_minishell *mini)
 {
     int fd;
     int mode;

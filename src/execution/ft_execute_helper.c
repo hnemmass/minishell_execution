@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 17:13:37 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/06/05 13:23:57 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/10 15:41:00 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -173,15 +173,9 @@ static void check_cwd(char **cmd, char **env_array)
 	temp = ft_strjoin(temp, "/");
 	temp = ft_strjoin_free(temp, cmd[0]);
 	if (access(temp, F_OK | X_OK) == 0)
-	{
 		execve(temp, cmd, env_array);
-		free(temp);
-		exit(0);
-	}
 	perror(cmd[0]);
 	free(temp);
-	// if (errno == ENOENT)
-    //     exit (127);
     if (errno == EACCES)
         exit (126);
     else
@@ -231,7 +225,7 @@ void	exec_cmd(char **cmd, t_env *env)
 	char	**env_array;
 
 	if (!cmd || !(*cmd))
-		return (exit(1));
+		exit(0);
 	env_array = env_to_array(env);
 	if (!env_array)
 	{

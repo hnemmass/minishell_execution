@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:45:12 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/06/08 20:09:36 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/10 18:06:19 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -132,7 +132,7 @@ static int	compare(char *line, char *delimiter)
 		return (1);
 	while (line[i] && delimiter[i] && line[i] == delimiter[i])
 		i++;
-	if (line[i] == '\n' && !delimiter[i])
+	if (line[i] == '\0' && !delimiter[i])
 		return (0);
 	return (1);
 }
@@ -185,7 +185,10 @@ static void	heredoc_signal_handler(int sig)
 	if (sig == SIGINT)
 	{
 		printf("\n");
-		exit(130); // Exit with status 130 (128 + SIGINT)
+		// Don't call exit() - let the signal terminate the process naturally
+		// Reset to default signal handler and re-raise the signal
+		signal(SIGINT, SIG_DFL);
+		kill(getpid(), SIGINT);
 	}
 }
 
@@ -198,52 +201,54 @@ static void	setup_heredoc_signals(void)
 static int	heredoc_child_process(char *delimiter, char *filename, t_minishell *mini)
 {
 	char	*line;
-	int		tty_fd;
 	int		temp_fd;
 
-	// Setup different signal handling for heredoc
 	setup_heredoc_signals();
-	
-	tty_fd = open("/dev/tty", O_RDONLY);
-	if (tty_fd == -1)
-	{
-		perror("open /dev/tty");
-		exit(1);
-	}
-	
 	temp_fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
 	if (temp_fd == -1)
 	{
 		perror("heredoc");
-		close(tty_fd);
 		exit(1);
 	}
-	
 	while (1)
 	{
-		ft_putstr_fd("> ", 1);
-		line = get_next_line(tty_fd);
+		line = readline("> ");
 		if (!line)
-		{
-			ft_putstr_fd("\n", 1);
 			break;
-		}
 		if (!compare(line, delimiter))
 		{
 			free(line);
 			break;
 		}
 		line = scan_string(line, mini->s_env, mini->exit_status);
+		line = ft_strjoin_free(line, "\n");
 		ft_putstr_fd(line, temp_fd);
 		free(line);
 	}
-	
 	close(temp_fd);
-	close(tty_fd);
-	exit(0); // Child exits successfully
+	exit(0);
 }
 
-static int	process_heredoc(char *delimiter, int cmd_index, int hdoc_index, t_minishell *mini)
+static int	handle_heredoc_result(int status, char *filename, t_minishell *mini)
+{
+	int	sig;
+
+	if (WIFSIGNALED(status))
+	{
+		sig = WTERMSIG(status);
+		if (sig == SIGINT)
+		{
+			unlink(filename);
+			free(filename);
+			mini->exit_status = 130;
+			return (-1);
+		}
+	}
+	return (open_heredoc_file(filename));
+}
+
+static int	process_heredoc(char *delimiter, int cmd_index, 
+							int hdoc_index, t_minishell *mini)
 {
 	char	*filename;
 	pid_t	pid;
@@ -254,67 +259,20 @@ static int	process_heredoc(char *delimiter, int cmd_index, int hdoc_index, t_min
 	filename = create_heredoc_filename(cmd_index, hdoc_index);
 	if (!filename)
 		return (-1);
-
-	// Temporarily ignore signals in parent while child handles heredoc
 	old_sigint = signal(SIGINT, SIG_IGN);
 	old_sigquit = signal(SIGQUIT, SIG_IGN);
-
 	pid = fork();
 	if (pid == -1)
-	{
-		perror("fork");
-		free(filename);
-		// Restore original signal handlers
-		signal(SIGINT, old_sigint);
-		signal(SIGQUIT, old_sigquit);
-		return (-1);
-	}
-	
+		return (perror("fork"), free(filename), signal(SIGINT, old_sigint)
+				, signal(SIGQUIT, old_sigquit), -1);
 	if (pid == 0)
-	{
-		// Child process handles heredoc input
 		heredoc_child_process(delimiter, filename, mini);
-		// This line should never be reached
-		exit(1);
-	}
-	else
-	{
-		// Parent process waits for child
-		waitpid(pid, &status, 0);
-		
-		// Restore original signal handlers
-		signal(SIGINT, old_sigint);
-		signal(SIGQUIT, old_sigquit);
-		
-		// Check if child was interrupted by signal
-		if (WIFSIGNALED(status))
-		{
-			int sig = WTERMSIG(status);
-			if (sig == SIGINT)
-			{
-				// Child was interrupted, cleanup and return error
-				unlink(filename);
-				free(filename);
-				mini->exit_status = 130;
-				printf("\n"); // Print newline after ^C
-				return (-1);
-			}
-		}
-		
-		// Check if child exited with error
-		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-		{
-			unlink(filename);
-			free(filename);
-			return (-1);
-		}
-		
-		// Open the heredoc file for reading
-		int fd = open_heredoc_file(filename);
-		free(filename);
-		return (fd);
-	}
+	waitpid(pid, &status, 0);
+	signal(SIGINT, old_sigint);
+	signal(SIGQUIT, old_sigquit);
+	return (handle_heredoc_result(status, filename, mini));
 }
+
 static t_redirect	*find_last_heredoc(t_redirect *redir)
 {
 	t_redirect	*last;
@@ -329,37 +287,45 @@ static t_redirect	*find_last_heredoc(t_redirect *redir)
 	return (last);
 }
 
-static int	process_heredocs(t_cmd *cmd_list, t_minishell *mini)
+static int	process_cmd_heredocs(t_cmd *cmd, int c_idx, t_minishell *mini)
 {
-	t_cmd		*cmd;
 	t_redirect	*redir;
 	t_redirect	*last_hdoc;
-	int			c_idx;
 	int			h_idx;
+
+	last_hdoc = find_last_heredoc(cmd->s_redirect);
+	h_idx = 0;
+	redir = cmd->s_redirect;
+	while (redir)
+	{
+		if (redir->type == TOKEN_HDOC)
+		{
+			redir->heredoc_fd = process_heredoc(redir->file, c_idx, h_idx, mini);
+			if (redir->heredoc_fd == -1)
+				return (-1);
+			if (redir != last_hdoc)
+			{
+				close(redir->heredoc_fd);
+				redir->heredoc_fd = -1;
+			}
+			h_idx++;
+		}
+		redir = redir->next;
+	}
+	return (0);
+}
+
+static int	process_heredocs(t_cmd *cmd_list, t_minishell *mini)
+{
+	t_cmd	*cmd;
+	int		c_idx;
 
 	c_idx = 0;
 	cmd = cmd_list;
 	while (cmd)
 	{
-		last_hdoc = find_last_heredoc(cmd->s_redirect);
-		h_idx = 0;
-		redir = cmd->s_redirect;
-		while (redir)
-		{
-			if (redir->type == TOKEN_HDOC)
-			{
-				redir->heredoc_fd = process_heredoc(redir->file, c_idx, h_idx, mini);
-				if (redir->heredoc_fd == -1)
-					return (-1);
-				if (redir != last_hdoc)
-				{
-					close(redir->heredoc_fd);
-					redir->heredoc_fd = -1;
-				}
-				h_idx++;
-			}
-			redir = redir->next;
-		}
+		if (process_cmd_heredocs(cmd, c_idx, mini) == -1)
+			return (-1);
 		cmd = cmd->next;
 		c_idx++;
 	}
@@ -391,16 +357,7 @@ static void	close_heredocs(t_cmd *cmd_list)
 static void	setup_redirections(t_cmd *cmd, t_minishell *mini)
 {
 	t_redirect	*r;
-	t_redirect	*last_input;
 
-	last_input = NULL;
-	r = cmd->s_redirect;
-	while (r)
-	{
-		if (r->type == TOKEN_HDOC || r->type == TOKEN_RED_IN)
-			last_input = r;
-		r = r->next;
-	}
 	r = cmd->s_redirect;
 	while (r)
 	{
@@ -414,14 +371,21 @@ static void	setup_redirections(t_cmd *cmd, t_minishell *mini)
 			}
 		}
 		else
-			apply_redirections(r, mini, last_input);
+			apply_redirections(r, mini);
 		r = r->next;
 	}
+}
+
+static void setup_child_signals(void)
+{
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
 }
 
 static void	ft_handle_child(t_cmd *cmd, int prev_fd, int *pipe_fd, 
 		int is_last, t_minishell *env)
 {
+	setup_child_signals();
 	if (prev_fd != -1)
 	{
 		dup2(prev_fd, STDIN_FILENO);
@@ -550,31 +514,75 @@ static pid_t	execute_single_cmd(t_cmd *cmd, t_minishell *env)
 	return (pid);
 }
 
+static void restore_parent_signals(void (*old_sigint)(int), void (*old_sigquit)(int))
+{
+	signal(SIGINT, old_sigint);
+	signal(SIGQUIT, old_sigquit);
+}
+
+static void	handle_exit_status(int status, t_minishell *env)
+{
+	if (WIFSIGNALED(status))
+	{
+		int	sig;
+
+		sig = WTERMSIG(status);
+		if (sig == SIGINT)
+		{
+			env->exit_status = 130;
+			printf("\n");
+		}
+		else if (sig == SIGQUIT)
+		{
+			env->exit_status = 131;
+			printf("Quit (core dumped)\n");
+		}
+		else
+			env->exit_status = 128 + sig;
+	}
+	else if (WIFEXITED(status))
+		env->exit_status = WEXITSTATUS(status);
+}
+
+static void	wait_for_child(pid_t last_pid, t_minishell *env)
+{
+	pid_t	pid;
+	int		status;
+
+	while (1)
+	{
+		pid = wait(&status);
+		if (pid == -1)
+			break ;
+		if (pid == last_pid)
+			handle_exit_status(status, env);
+	}
+}
+
 void	ft_execute(t_cmd *cmd_list, t_minishell *env)
 {
 	int		prev_fd;
 	pid_t	last_pid;
-	int		status;
-	pid_t	pid;
+	void	(*old_sigint)(int);
+	void	(*old_sigquit)(int);
 
 	prev_fd = -1;
 	last_pid = -1;
 	if (process_heredocs(cmd_list, env) < 0)
 	{
+		if (env->exit_status == 130)
+			return ;
 		env->exit_status = 1;
-		return;
+		return ;
 	}
+	old_sigint = signal(SIGINT, SIG_IGN);
+	old_sigquit = signal(SIGQUIT, SIG_IGN);
 	if (!cmd_list->next)
 		last_pid = execute_single_cmd(cmd_list, env);
 	else
 		ft_execute_commands(cmd_list, env, prev_fd, &last_pid);
-	close_heredocs(cmd_list);	
+	close_heredocs(cmd_list);
 	if (last_pid != -1)
-	{
-		while ((pid = wait(&status)) != -1)
-		{
-			if (pid == last_pid)
-				env->exit_status = WEXITSTATUS(status);
-		}
-	}
+		wait_for_child(last_pid, env);
+	restore_parent_signals(old_sigint, old_sigquit);
 }

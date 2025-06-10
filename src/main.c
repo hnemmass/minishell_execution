@@ -6,11 +6,13 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/08 17:16:24 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/06/08 19:52:06 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/10 18:00:32 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/minishell.h"
+
+int signal_received = 0;
 
 static t_minishell	*init_minishell(char **env, t_status *e_status);
 static t_status		minishell(t_minishell **s_minishell);
@@ -22,8 +24,6 @@ static void			print_cmds(t_cmd *s_cmd);
 void 				print_cmd_structure(t_cmd *cmd_list);
 
 /*			---------		MAIN		--------			*/
-
-volatile sig_atomic_t signal_context = 0;
 
 int main(int arc, char **argv, char **env)
 {
@@ -68,6 +68,7 @@ static t_minishell	*init_minishell(char **env, t_status *e_status)
 
 void	handle_int(int sig)
 {
+	signal_received = 130;
 	printf("\n");
 	rl_on_new_line();
 	rl_replace_line("", 0);
@@ -92,7 +93,12 @@ static t_status	minishell(t_minishell **s_minishell)
 	if (!s_ms->cmdline)
 	{
 		printf("exit\n");
-		exit(0);
+		exit(130);
+	}
+	if (signal_received == 130)
+	{
+		s_ms->exit_status = 130;
+		signal_received = 0;
 	}
 	if (ft_strcmp(s_ms->cmdline, "exit") == 0)
 	{
