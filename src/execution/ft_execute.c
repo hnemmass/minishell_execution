@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/16 16:45:12 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/06/10 18:06:19 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/12 15:34:57 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,7 +72,7 @@ static int	exec_builtin(char **cmd, t_minishell *minishell)
 	else if (ft_strcmp(cmd[0], "pwd") == 0)
 		return (ft_pwd(minishell));
 	else if (ft_strcmp(cmd[0], "unset") == 0)
-		return (ft_unset(cmd, minishell->s_env));
+		return (ft_unset(cmd, &minishell->s_env));
 	else if (ft_strcmp(cmd[0], "exit") == 0)
 		return (ft_exit(cmd, minishell));
 	return (1);
@@ -155,10 +155,10 @@ static int	append_itoa(char **str, int num)
 static char	*create_heredoc_filename(int cmd_index, int hdoc_index)
 {
 	char	*filename;
-	char	*cmd_part;
-	char	*hdoc_part;
 	char	*tmp;
+	pid_t	pid;
 
+	pid = getpid();
 	filename = ft_strdup("/tmp/heredoc_tmp_");
 	if (!filename || !append_itoa(&filename, cmd_index))
 		return (free(filename), NULL);
@@ -166,7 +166,11 @@ static char	*create_heredoc_filename(int cmd_index, int hdoc_index)
 	free(filename);
 	if (!tmp || !append_itoa(&tmp, hdoc_index))
 		return (free(tmp), NULL);
-	return (tmp);
+	filename = ft_strjoin(tmp, "_");
+	free(tmp);
+	if (!filename || !append_itoa(&filename, pid))
+		return (free(filename), NULL);
+	return (filename);
 }
 
 static int	open_heredoc_file(char *filename)
@@ -180,19 +184,28 @@ static int	open_heredoc_file(char *filename)
 	return (fd);
 }
 
+void close_fd(int fd, int flag)
+{
+	static char temp_fd;
+
+	if (flag == 1)
+		close(temp_fd);
+	else
+		temp_fd = fd;
+}
+
 static void	heredoc_signal_handler(int sig)
 {
 	if (sig == SIGINT)
 	{
 		printf("\n");
-		// Don't call exit() - let the signal terminate the process naturally
-		// Reset to default signal handler and re-raise the signal
+		close_fd(0, 1);
 		signal(SIGINT, SIG_DFL);
 		kill(getpid(), SIGINT);
 	}
 }
 
-static void	setup_heredoc_signals(void)
+static void	setup_heredoc_signals(int temp_fd)
 {
 	signal(SIGINT, heredoc_signal_handler);
 	signal(SIGQUIT, SIG_IGN);
@@ -203,13 +216,14 @@ static int	heredoc_child_process(char *delimiter, char *filename, t_minishell *m
 	char	*line;
 	int		temp_fd;
 
-	setup_heredoc_signals();
 	temp_fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	close_fd(temp_fd, 0);
 	if (temp_fd == -1)
 	{
 		perror("heredoc");
 		exit(1);
 	}
+	setup_heredoc_signals(temp_fd);
 	while (1)
 	{
 		line = readline("> ");
@@ -522,10 +536,10 @@ static void restore_parent_signals(void (*old_sigint)(int), void (*old_sigquit)(
 
 static void	handle_exit_status(int status, t_minishell *env)
 {
+	int	sig;
+
 	if (WIFSIGNALED(status))
 	{
-		int	sig;
-
 		sig = WTERMSIG(status);
 		if (sig == SIGINT)
 		{
@@ -570,6 +584,7 @@ void	ft_execute(t_cmd *cmd_list, t_minishell *env)
 	last_pid = -1;
 	if (process_heredocs(cmd_list, env) < 0)
 	{
+		close_heredocs(cmd_list);
 		if (env->exit_status == 130)
 			return ;
 		env->exit_status = 1;

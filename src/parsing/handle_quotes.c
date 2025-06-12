@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handle_quotes.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: yhajbi <yhajbi@student.42.fr>              +#+  +:+       +#+        */
+/*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/21 21:14:33 by yhajbi            #+#    #+#             */
-/*   Updated: 2025/06/03 17:14:52 by yhajbi           ###   ########.fr       */
+/*   Updated: 2025/06/11 17:07:37 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -215,7 +215,7 @@ static void	join_three_nodes(t_export_parse *prv, t_export_parse *node, t_export
 }
 
 static void	split_and_insert_expanded(t_export_parse **head, t_export_parse *node)
-{	
+{
 	char			**split_words;
 	t_export_parse	*new_token;
 	t_export_parse	*next_node;

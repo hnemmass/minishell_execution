@@ -1,0 +1,19 @@
+export a=""
+export b=$a
+
+ls < ""
+
+minishell> export m=hhj
+  Arg[0]: export
+  Arg[1]: m=hhj
+------------------------------
+Command Structure:
+Command 1:
+  ├─ is_builtin: 1
+    └─ argv: ["export", "m=hhj"]
+  └─ Redirections: (none)
+minishell> export n+=$m
+
+
+export a="dj"
+export a= n=$a a=abc n=$a $a $a=abc

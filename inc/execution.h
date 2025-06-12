@@ -6,7 +6,7 @@
 /*   By: hnemmass <hnemmass@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/23 17:11:28 by hnemmass          #+#    #+#             */
-/*   Updated: 2025/06/09 17:10:35 by hnemmass         ###   ########.fr       */
+/*   Updated: 2025/06/11 16:01:56 by hnemmass         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ int		ft_echo(char **cmd);
 int		ft_env(t_env *env);
 int		ft_export(char **cmd, t_env *env);
 int		ft_pwd(t_minishell *mini);
-int		ft_unset(char **cmd, t_env *env);
+int		ft_unset(char **cmd, t_env **env);
 void	ft_execute(t_cmd *data, t_minishell *env);
 void	exec_cmd(char **cmd, t_env *env);
 char	*make_path(t_env *env);

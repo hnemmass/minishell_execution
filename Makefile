@@ -1,4 +1,4 @@
-CC = gcc -g #-fsanitize=address #-Wall -Wextra -Werror
+CC = gcc -g -fsanitize=address #-Wall -Wextra -Werror
 RD = -lreadline
 
 HED = inc/
